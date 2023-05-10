@@ -72,6 +72,11 @@ async function run() {
             res.send(result);
 
         })
+        app.get('/image', async (req, res) => {
+            const query = {};
+            const result = await imageCollection.find(query).sort({_id:-1}).toArray();
+            res.send(result);
+        })
 
     }
     finally {

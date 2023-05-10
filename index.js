@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const fileUpload = require('express-fileupload');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.port || 5000;
@@ -9,6 +10,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload());
 
 const JWT_SECRET = process.env.ACCESS_TOKEN;
 
@@ -16,17 +18,18 @@ const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 console.log(uri);
 
-async function run(){
-    try{
+async function run() {
+    try {
         const authCollection = client.db('dobby').collection('auth');
+        const imageCollection = client.db('dobby').collection('image');
 
-        app.post('/signup', async(req, res) =>{
+        app.post('/signup', async (req, res) => {
             const user = req.body;
             console.log(user);
             const result = await authCollection.insertOne(user);
             res.send(result);
         })
-        app.post('/login', async(req, res) =>{
+        app.post('/login', async (req, res) => {
             const user = req.body;
             const email = req.body.email;
             const password = req.body.password;
@@ -36,13 +39,13 @@ async function run(){
             if (checkPassword === password) {
                 const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1d' })
                 console.log(token);
-                res.send({status: true, token: token});
+                res.send({ status: true, token: token });
             }
-            else{
-                res.send({status: false});
+            else {
+                res.send({ status: false });
             }
         })
-        app.post('/authUser', async(req, res) =>{
+        app.post('/authUser', async (req, res) => {
             const { token } = req.body;
             try {
                 const user = jwt.verify(token, JWT_SECRET);
@@ -56,8 +59,22 @@ async function run(){
             }
         })
 
+        /*-------------------Upload Images-------------------*/
+        app.post('/image', async (req, res) => {
+            const imageData = req.files.image.data;
+            const imageToString = imageData.toString('base64');
+            const imageBuffer = Buffer.from(imageToString, 'base64');
+            const imageUpload = {
+                name: req.body.name,
+                imageFile: imageBuffer
+            }
+            const result = await imageCollection.insertOne(imageUpload);
+            res.send(result);
+
+        })
+
     }
-    finally{
+    finally {
 
     }
 

@@ -77,6 +77,14 @@ async function run() {
             const result = await imageCollection.find(query).sort({_id:-1}).toArray();
             res.send(result);
         })
+        app.get('/image/:search', async (req, res) => {
+            const search = req.params.search;
+            const regex = new RegExp(search, 'i')
+            const query = {name: {$regex: regex} };
+            const result = await imageCollection.find(query).sort({_id:-1}).toArray();
+            // console.log(result);
+            res.send(result);
+        })
 
     }
     finally {
